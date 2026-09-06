@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confession Button</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      background-color: #0f172a;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 65, 108, 0.25) 0%, rgba(15, 23, 42, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+      opacity: 0.5;
+    }
+
+    body:has(.love-btn.playing)::before {
+      transform: scale(2.5);
+      opacity: 0.9;
+    }
+
+    .love-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.1rem 2.2rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(255, 65, 108, 0.4);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .love-btn:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 18px 35px -5px rgba(255, 65, 108, 0.6);
+    }
+
+    .love-btn:active {
+      transform: translateY(1px) scale(0.97);
+    }
+
+    .heart-icon {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .love-btn:hover .heart-icon {
+      transform: scale(1.2);
+    }
+
+    /* Heartbeat animation while audio plays */
+    .love-btn.playing .heart-icon {
+      animation: heartbeat 0.8s infinite alternate ease-in-out;
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.35); }
+    }
+
+    /* Floating particles */
+    .floating-heart {
+      position: absolute;
+      pointer-events: none;
+      font-size: 1.5rem;
+      animation: floatUp 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      z-index: 5;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(0.5) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tw-x), var(--tw-y)) scale(1.4) rotate(var(--tw-r));
+      }
+    }
+
+    /* Popup Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid rgba(255, 65, 108, 0.3);
+      padding: 2rem 2.5rem;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 320px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      transform: scale(0.8) translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-card h2 {
+      color: #ffffff;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-card p {
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .close-btn {
+      padding: 0.6rem 1.5rem;
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+      border: none;
+      border-radius: 9999px;
+      color: #ffffff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <audio id="audio" loop preload="auto">
+    <source src="Seasons.mp3" type="audio/mpeg">
+  </audio>
+
+  <button class="love-btn" id="loveBtn" aria-label="Play love music">
+    <span class="heart-icon" id="heartIcon" aria-hidden="true"></span>
+    <span id="btnText">Click to show :3</span>
+  </button>
+
+  <!-- Popup Message Container -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <h2>A Message For You! 💖</h2>
+      <p>Confession lang… 
+May gusto sana akong sabihin pero nahihiya ako.
+Hindi ko alam kung paano sisimulan pero…
+pwede ba akong umutang kahit 500 lang? HAHAHA 
+Pangako, babayaran ko rin agad.</p>
+      <button class="close-btn" id="closeBtn">Close </button>
+    </div>
+  </div>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const loveBtn = document.getElementById('loveBtn');
+    const btnText = document.getElementById('btnText');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const closeBtn = document.getElementById('closeBtn');
+
+    // Function to stop audio playback and reset UI states
+    function stopMusic() {
+      audio.pause();
+      audio.currentTime = 0; // Rewind audio track back to start
+      loveBtn.classList.remove('playing');
+      btnText.textContent = 'Click to show :3';
+    }
+
+    loveBtn.addEventListener('click', (e) => {
+      // Toggle audio playback
+      if (audio.paused) {
+        audio.play().then(() => {
+          loveBtn.classList.add('playing');
+          btnText.textContent = 'Sending Love...';
+        }).catch(err => console.error("Audio playback failed:", err));
+      } else {
+        stopMusic();
+      }
+
+      // Trigger heart particle effect
+      createHeartBurst(e.clientX, e.clientY);
+
+      // Show popup message
+      modalOverlay.classList.add('active');
+    });
+
+    // Close popup AND stop audio when close button is clicked
+    closeBtn.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      stopMusic();
+    });
+
+    // Close popup AND stop audio when backdrop is clicked
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('active');
+        stopMusic();
+      }
+    });
+
+    function createHeartBurst(x, y) {
+      const heartEmojis = ['❤️', '💖', '💕', '✨', '🌸'];
+      const count = 12;
+
+      for (let i = 0; i < count; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'floating-heart';
+        heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80 + Math.random() * 120;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance - 50;
+        const rot = (Math.random() - 0.5) * 60;
+
+        heart.style.left = `${x}px`;
+        heart.style.top = `${y}px`;
+        heart.style.setProperty('--tw-x', `${tx}px`);
+        heart.style.setProperty('--tw-y', `${ty}px`);
+        heart.style.setProperty('--tw-r', `${rot}deg`);
+
+        document.body.appendChild(heart);
+
+        setTimeout(() => heart.remove(), 1800);
+      }
+    }
+  </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"e3c1c9af36de41759418005494a48906","r":1}' crossorigin="anonymous"></script>
+</body>
+</html>
